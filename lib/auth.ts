@@ -3,6 +3,7 @@ import { UpstashRedisAdapter } from "@auth/upstash-redis-adapter";
 import { db } from "./db";
 import GoogleProvider from "next-auth/providers/google";
 import { Adapter } from "next-auth/adapters";
+import { fetchRedis } from "@/helpers/redis";
 
 function getGoogleCredentials() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -22,6 +23,8 @@ function getGoogleCredentials() {
 }
 
 export const authOptions: NextAuthOptions = {
+  // everytime when someones logs in, a certain action will be done automatically
+  // in our case user data will be put in DB
   adapter: UpstashRedisAdapter(db) as Adapter,
   session: {
     strategy: "jwt",
@@ -38,42 +41,34 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, account, profile, isNewUser }) {
       // check if this particular user id present in DB
-      // this id is added by adapter
-      const dbUser = (await db.get(`user:${token.id}`)) as User | null;
-      console.log("dbUser before", dbUser);
+      // this id is added by adapter automatically
+      const dbUserResult = (await fetchRedis("get", `user:${token.id}`)) as
+        | string
+        | null;
 
-      console.log("JWT USER", user, token);
-
-      if (!dbUser) {
+      if (!dbUserResult) {
         token.id = user!.id;
         return token;
       }
 
-      console.log("db user present", {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        picture: dbUser.image,
-      });
+      const dbUser = JSON.parse(dbUserResult) as User;
 
       return {
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
         picture: dbUser.image,
+        meranaam: "chinchinchu",
       };
     },
 
     async session({ session, token, user }) {
-      console.log("before session",token, session);
       if (token) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
       }
-
-      console.log("after session", session);
 
       return session;
     },
