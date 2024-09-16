@@ -42,9 +42,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account, profile, isNewUser }) {
       // check if this particular user id present in DB
       // this id is added by adapter automatically
+      console.log("token, user", token, user);
       const dbUserResult = (await fetchRedis("get", `user:${token.id}`)) as
         | string
         | null;
+
+      console.log("dbUserResult", dbUserResult);
 
       if (!dbUserResult) {
         token.id = user!.id;
@@ -63,6 +66,7 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token, user }) {
+      console.log("session ke andar", token);
       if (token) {
         session.user.id = token.id;
         session.user.name = token.name;
