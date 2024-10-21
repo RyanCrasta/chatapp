@@ -7,7 +7,6 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
 
     const isAuth = await getToken({ req });
-    console.log("isAuth", isAuth);
     const isLoginPage = pathname.startsWith("/login");
 
     const sensitiveRoutes = ["/dashboard"];
