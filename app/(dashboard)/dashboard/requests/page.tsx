@@ -18,7 +18,6 @@ const page = async () => {
     `user:${session.user.id}:incoming_friend_requests`
   )) as string[];
 
-  console.log("incomingSenderIds", incomingSenderIds);
 
   const incomingFriendRequests = await Promise.all(
     incomingSenderIds.map(async (senderId) => {
